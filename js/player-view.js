@@ -29,7 +29,7 @@ function renderPlayerView() {
         const over = (parseInt(pts) || 0) - (parseInt(upk) || 0) < 0;
         block.innerHTML += '<div class="pv-stat ' + k + '">' +
             '<div class="pv-stat-name">' + labels[k] + '</div>' +
-            '<div class="pv-stat-num">' + mod + '</div>' +
+            '<div class="pv-stat-badge"><div class="pv-stat-num">' + mod + '</div></div>' +
             '<div class="pv-stat-mod">score ' + pts + ' &middot; upkeep ' + upk + '</div>' +
             (over ? '<div class="pv-stat-warn">Over upkeep — shed something</div>' : '') +
             '</div>';
@@ -118,7 +118,8 @@ function renderPlayerView() {
 
     // This turn
     document.getElementById('pv-actions').innerHTML =
-        '<div><b>' + actionsPer + '</b> action(s) this turn' + (ruler ? ' — led by ' + ruler : '') + '</div>';
+        '<div class="pv-mini-num">' + actionsPer + ' Actions</div>' +
+        '<div class="pv-mini-note">This turn.' + (ruler ? ' — led by ' + ruler : '') + '</div>';
 
     renderActionCards();
 }

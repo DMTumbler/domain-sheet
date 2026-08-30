@@ -185,6 +185,6 @@ function addLog(row) {
         '<div><label>Action 1</label><input type="text" value="' + (row.a1 || '') + '" placeholder="Accumulate Treasure — success"></div>' +
         '<div><label>Action 2</label><input type="text" value="' + (row.a2 || '') + '" placeholder="Establish Asset (Palisade) — fail"></div>' +
         '</div><div class="log-notes"><textarea placeholder="Notes, complications, hooks for next session">' + (row.notes || '') + '</textarea></div>' +
-        '<button class="del-btn" style="float:right;margin-top:8px; margin-bottom: 8px;" onclick="document.getElementById(\'' + id + '\').remove()">× remove entry</button>';
+        '<button class="del-btn" style="float:right;margin-top:-10px;" onclick="document.getElementById(\'' + id + '\').remove()">× remove entry</button>';
     document.getElementById('log-body').appendChild(div);
 }
