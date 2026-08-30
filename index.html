@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Midgard Kingdom Sheet</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<div class="bar">
+    <button class="print-btn" onclick="exportData()">Export save file</button>
+    <button class="print-btn" onclick="document.getElementById('import-file').click()">Import save file</button>
+    <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importData(event)">
+    <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+</div>
+<div id="import-status"
+     style="max-width:900px;margin:0 auto 10px;font-size:12px;color:var(--sub);text-align:right;"></div>
+
+<div class="tabbar">
+    <button class="tab-btn active" id="tab-btn-gm" onclick="switchTab('gm')">GM view</button>
+    <button class="tab-btn" id="tab-btn-player" onclick="switchTab('player')">Player view</button>
+</div>
+
+<div id="gm-tab">
+    <div class="sheet">
+        <h1>Midgard Domain Sheet <small>An Echo, Resounding Ruleset</small></h1>
+
+        <div class="toprow">
+            <div class="field"><label>Domain name</label><input type="text" id="hdr-domain" placeholder="The Free Coast"
+                                                                oninput="renderPlayerView()"></div>
+            <div class="field"><label>Capital / seat</label><input type="text" id="hdr-capital"
+                                                                   placeholder="Hjalmarsund"
+                                                                   oninput="renderPlayerView()"></div>
+            <div class="field"><label>Ruler(s)</label><input type="text" id="hdr-ruler" placeholder="Torvald"
+                                                             oninput="renderPlayerView()"></div>
+        </div>
+        <div class="toprow">
+            <div class="field"><label>Region</label><input type="text" id="hdr-region" placeholder="Westmark"></div>
+            <div class="field"><label>Current turn #</label><input type="number" id="hdr-turn" value="1"
+                                                                   oninput="renderPlayerView()"></div>
+            <div class="field"><label>Actions per turn</label><input type="text" id="hdr-actions"
+                                                                     placeholder="2 (PC-run)"
+                                                                     oninput="renderPlayerView()"></div>
+        </div>
+
+        <h2>Domain values</h2>
+        <div class="stats">
+
+            <div class="stat mil">
+                <div class="stat-name">Military</div>
+                <div class="stat-grid">
+                    <div class="field"><label>Points</label><input type="number" class="pts" id="mil-pts" value="0"
+                                                                   readonly style="font-weight:bold;"></div>
+                    <div class="field"><label>Upkeep</label><input type="number" class="upk" id="mil-upk" value="0"
+                                                                   readonly></div>
+                    <div class="field"><label>Mod</label><input type="text" id="mil-mod" readonly
+                                                                style="text-align:center;font-weight:bold;color:var(--mil);">
+                    </div>
+                </div>
+                <div class="stat-labels">
+                    <div>total (auto)</div>
+                    <div>upkeep (auto)</div>
+                    <div>modifier</div>
+                </div>
+                <div class="stat-net" id="mil-net"></div>
+            </div>
+
+            <div class="stat wea">
+                <div class="stat-name">Wealth</div>
+                <div class="stat-grid">
+                    <div class="field"><label>Points</label><input type="number" class="pts" id="wea-pts" value="0"
+                                                                   readonly style="font-weight:bold;"></div>
+                    <div class="field"><label>Upkeep</label><input type="number" class="upk" id="wea-upk" value="0"
+                                                                   readonly></div>
+                    <div class="field"><label>Mod</label><input type="text" id="wea-mod" readonly
+                                                                style="text-align:center;font-weight:bold;color:var(--wea);">
+                    </div>
+                </div>
+                <div class="stat-labels">
+                    <div>total (auto)</div>
+                    <div>upkeep (auto)</div>
+                    <div>modifier</div>
+                </div>
+                <div class="stat-net" id="wea-net"></div>
+            </div>
+
+            <div class="stat soc">
+                <div class="stat-name">Social</div>
+                <div class="stat-grid">
+                    <div class="field"><label>Points</label><input type="number" class="pts" id="soc-pts" value="0"
+                                                                   readonly style="font-weight:bold;"></div>
+                    <div class="field"><label>Upkeep</label><input type="number" class="upk" id="soc-upk" value="0"
+                                                                   readonly></div>
+                    <div class="field"><label>Mod</label><input type="text" id="soc-mod" readonly
+                                                                style="text-align:center;font-weight:bold;color:var(--soc);">
+                    </div>
+                </div>
+                <div class="stat-labels">
+                    <div>total (auto)</div>
+                    <div>upkeep (auto)</div>
+                    <div>modifier</div>
+                </div>
+                <div class="stat-net" id="soc-net"></div>
+            </div>
+        </div>
+
+        <h2>Obstacles</h2>
+        <div class="penalty-note" style="margin-top:0;">Pick a named Obstacle (p.29-37) or Custom. Level defaults to
+            1d6+2. Roll needed = 12 − value mod + (level ×1 matched, ×2 wrong unit, ×3 wrong both). Hit: level −1d4.
+            Miss: unit gains 1 Disruption. Regrows 1 level/turn if ignored.
+        </div>
+        <table class="loc-table" id="main-obstacle-table">
+            <thead>
+            <tr>
+                <th style="width:15%;">Location</th>
+                <th style="width:19%;">Obstacle</th>
+                <th style="width:6%;">Level</th>
+                <th style="width:14%;">Unit sent</th>
+                <th style="width:6%;">Match</th>
+                <th style="width:9%;">Roll needed</th>
+                <th style="width:8%;">Draining held loc.</th>
+                <th style="width:15%;">Notes</th>
+                <th style="width:24px;"></th>
+            </tr>
+            </thead>
+            <tbody id="main-obstacle-body"></tbody>
+        </table>
+        <button class="add-btn" onclick="addMainObstacle()">+ Add obstacle</button>
+        <div class="penalty-note">Unresolved in an unheld location: blocks conquest. Draining a held one: check the box
+            for a −(level÷2) upkeep penalty, auto-added above.
+        </div>
+
+        <h2>Treasury</h2>
+        <div class="treasury">
+            <div class="field big"><label>Treasure points</label><input type="number" id="treasure" value="0"
+                                                                        oninput="renderPlayerView()"></div>
+            <div class="field"><label style="font-size:10px;">Spend rule</label>
+                <div style="font-size:11px;color:var(--sub);padding-top:6px;">1 pt = +1 to a roll (max 5 spent before
+                    the roll). After the roll, 2 pts = +1 (max 4 spent). Withdraw: 1st pt = 500gp × Wealth, each further
+                    pt in the same action costs one more Treasure than the last.
+                </div>
+            </div>
+        </div>
+        <div class="penalty-note" style="margin-top:10px;">Separate from Treasure — free, no roll: <b
+                id="stipend-amount">0 gp</b>/turn (100gp × Wealth), splittable among officials, convertible to gold.
+        </div>
+
+        <h2>Atrocity</h2>
+        <div class="atrocity">
+            <div class="field big"><label>Atrocity points</label><input type="number" id="atrocity" value="0"
+                                                                        oninput="atroc()"></div>
+            <div class="field" style="flex:2;"><label style="font-size:10px;">Effect</label>
+                <div id="atroc-note" style="font-size:11px;color:var(--sub);padding-top:6px;">No penalty. A domain with
+                    any Atrocity suffers a −2 upkeep penalty to Military, Wealth, and Social; the penalty worsens by 1
+                    for every full 4 points.
+                </div>
+            </div>
+        </div>
+
+        <h2>Locations held</h2>
+        <table class="loc-table" id="loc-table">
+            <thead>
+            <tr>
+                <th style="width:26%;">Name</th>
+                <th style="width:16%;">Type</th>
+                <th style="width:10%;">Mil</th>
+                <th style="width:10%;">Wea</th>
+                <th style="width:10%;">Soc</th>
+                <th>Notes / obstacle</th>
+                <th style="width:24px;"></th>
+            </tr>
+            </thead>
+            <tbody id="loc-body"></tbody>
+        </table>
+        <button class="add-btn" onclick="addLoc()">+ Add location</button>
+
+        <h2>Assets</h2>
+        <table class="loc-table" id="asset-table">
+            <thead>
+            <tr>
+                <th style="width:18%;">Asset</th>
+                <th style="width:10%;">Location</th>
+                <th colspan="3" style="width:18%;text-align:center;border-bottom:1px solid var(--line-strong);">Points
+                    (net)
+                </th>
+                <th colspan="3" style="width:18%;text-align:center;border-bottom:1px solid var(--line-strong);">Upkeep
+                </th>
+                <th style="width:8%;">Disr.</th>
+                <th style="width:16%;">Notes</th>
+                <th style="width:24px;"></th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th style="width:6%;">Mil</th>
+                <th style="width:6%;">Wea</th>
+                <th style="width:6%;">Soc</th>
+                <th style="width:6%;">Mil</th>
+                <th style="width:6%;">Wea</th>
+                <th style="width:6%;">Soc</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="asset-body"></tbody>
+        </table>
+        <button class="add-btn" onclick="addAsset()">+ Add asset</button>
+
+        <h2>Military units</h2>
+        <table class="loc-table" id="unit-table">
+            <thead>
+            <tr>
+                <th style="width:18%;">Unit</th>
+                <th style="width:12%;">Location</th>
+                <th colspan="3" style="width:18%;text-align:center;border-bottom:1px solid var(--line-strong);">Upkeep
+                </th>
+                <th style="width:10%;">HP/status</th>
+                <th style="width:22%;">Notes</th>
+                <th style="width:24px;"></th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th style="width:6%;">Mil</th>
+                <th style="width:6%;">Wea</th>
+                <th style="width:6%;">Soc</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="unit-body"></tbody>
+        </table>
+        <button class="add-btn" onclick="addUnit()">+ Add unit</button>
+
+        <h2>Domain turn log</h2>
+        <div id="log-body"></div>
+        <button class="add-btn" onclick="addLog()">+ Add turn entry</button>
+
+        <h2>Domain actions reference</h2>
+        <div class="actions-ref">
+            <div><b>Accumulate Treasure</b> — Wealth check, DC 8 + current Treasure</div>
+            <div><b>Attack a Location</b> — mass combat rules</div>
+            <div><b>Disband an Asset</b> — remove asset(s)</div>
+            <div><b>Establish an Asset</b> — 3 checks (Mil/Wea/Soc), DC 12 + |benefit or cost|</div>
+            <div><b>Establish / Erase a Location</b> — mark or raze a site</div>
+            <div><b>Move an Asset</b> — units only, normal movement</div>
+            <div><b>Punish Atrocity</b> — needs a Scapegoat asset; DC 5 + Atrocity, removes 1d4+2 (1/year)</div>
+            <div><b>Rectify Disruption</b> — remove 1d4+2 Disruption points</div>
+            <div><b>Repair an Asset</b> — heal HP up to current Military value</div>
+            <div><b>Solve an Obstacle</b> — save vs Obstacle, −level and −value mod (×2/×3 if wrong unit/value)</div>
+            <div><b>Withdraw Treasure</b> — 1st pt = 500gp × Wealth; escalates by Treasure spent</div>
+        </div>
+
+        <div class="setting-wordmark">
+            <img src="/assets/logo.png" alt="Midgard" style="max-height:100px;">
+        </div>
+        <div class="footer-note">Domain sheet for Kevin Crawford's <em>An Echo, Resounding</em> (Sine Nomine
+            Publishing), styled for Kobold Press's <em>Midgard</em> setting. Unofficial fan tool.
+        </div>
+    </div>
+</div>
+
+<div id="player-tab">
+    <div class="sheet">
+        <h1 id="pv-title">Midgard Domain Sheet <small>Player view</small></h1>
+
+        <div class="pv-stats" id="pv-stat-block"></div>
+
+        <div id="pv-obstacle-warnings"></div>
+
+        <div class="pv-section">
+            <h3>Locations held</h3>
+            <ul class="pv-list" id="pv-locations"></ul>
+        </div>
+
+        <div class="pv-section">
+            <h3>Assets</h3>
+            <ul class="pv-list" id="pv-assets"></ul>
+        </div>
+
+        <div class="pv-section">
+            <h3>Military units</h3>
+            <ul class="pv-list" id="pv-units"></ul>
+        </div>
+
+        <div class="pv-section">
+            <h3>Treasury</h3>
+            <div id="pv-treasury" style="font-size:28px;"></div>
+            <div id="pv-stipend" style="font-size:12px;color:var(--sub);margin-top:6px;"></div>
+        </div>
+
+        <div class="pv-section">
+            <h3>Atrocity</h3>
+            <div id="pv-atrocity" style="font-size:28px;"></div>
+            <div id="pv-atrocity-note" style="font-size:12px;color:var(--sub);margin-top:6px;"></div>
+        </div>
+
+        <div class="pv-section">
+            <h3>This turn</h3>
+            <div class="pv-actions" id="pv-actions"></div>
+        </div>
+
+        <div class="pv-section">
+            <h3>Domain actions</h3>
+            <div class="pv-action-cards" id="pv-action-cards"></div>
+        </div>
+
+        <div class="footer-note">Simplified view — switch to GM view for full detail and editing of book values, upkeep,
+            and obstacle math.
+        </div>
+    </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/calc.js"></script>
+<script src="js/locations.js"></script>
+<script src="js/rows.js"></script>
+<script src="js/player-view.js"></script>
+<script src="js/io.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
